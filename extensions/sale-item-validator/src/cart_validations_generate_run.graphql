@@ -1,0 +1,24 @@
+query CartValidationsGenerateRunInput {
+  cart {
+    lines {
+      id
+      quantity
+      attribute(key: "sitewide_discount") {
+        value
+      }
+      merchandise {
+        ... on ProductVariant {
+          id
+          product {
+            title
+          }
+        }
+      }
+    }
+  }
+  shop {
+    metafield(namespace: "sitewide", key: "sale_active") {
+      value
+    }
+  }
+}
