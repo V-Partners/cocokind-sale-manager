@@ -2,11 +2,11 @@
 
 ## What This Does
 
-This Shopify Function **blocks checkout** when:
+This Checkout UI Extension **automatically removes sale items** when:
 1. The sale has ended (shop metafield `sitewide.sale_active` is NOT `"true"`)
 2. Customer has items in cart with the `sitewide_discount` line item property
 
-When both conditions are met, customers see an error message and **must manually remove the sale items** before checkout.
+When both conditions are met, items are automatically removed and customers see a banner notification.
 
 ## Setup Steps
 
@@ -76,21 +76,24 @@ Get your shop ID:
 query { shop { id } }
 ```
 
-### 4. Activate the Function
+### 4. Activate the UI Extension
 
 1. Go to **Shopify Admin → Settings → Checkout**
-2. Scroll to **Checkout validation**
-3. Enable **sale-item-validator**
+2. Click **Customize** (next to checkout)
+3. Click **Add app block**
+4. Select **Sale Item Remover**
+5. Place it in the checkout (recommended: below order summary)
+6. Save changes
 
 ## How It Works
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Customer tries to checkout                 │
+│  Customer navigates to checkout             │
 └─────────────────────────────────────────────┘
                    ↓
 ┌─────────────────────────────────────────────┐
-│  Function checks:                           │
+│  Extension checks:                          │
 │  1. Is sale active? (shop metafield)        │
 │  2. Any items have sitewide_discount?       │
 └─────────────────────────────────────────────┘
@@ -99,32 +102,25 @@ query { shop { id } }
         ↓                     ↓
    Sale ACTIVE           Sale ENDED
         ↓                     ↓
-  ✅ Allow            ❌ Block with error:
-   checkout          "The sale has ended.
-                     Please remove [Product]
-                     from your cart."
+  ✅ Items stay         🗑️  Auto-remove items
+   in cart             Show banner:
+                       "The sale has ended.
+                       [Products] have been
+                       removed from cart."
 ```
 
 ## Testing
 
 1. Add a product with `sitewide_discount` property to cart
 2. Set metafield to `"false"` (end sale)
-3. Try to checkout → should see error message
-4. Remove the item or set metafield to `"true"` → checkout succeeds
+3. Navigate to checkout → items should be automatically removed
+4. Should see banner notification with removed product names
+5. Set metafield to `"true"` → items stay in cart at checkout
 
 ## Important Notes
 
-- **This blocks checkout, it does NOT remove items**
-- Customers must manually remove expired sale items
-- The function checks EVERY time checkout is attempted
+- **Items are automatically removed at checkout, no customer action needed**
+- Extension runs every time checkout page loads
+- Banner message shows which products were removed
 - No frontend changes needed in your theme
-- Works with all checkout types (standard, accelerated, POS, etc.)
-
-## What About Automatic Removal?
-
-If you want to **automatically remove** items instead of blocking checkout, you need a different approach:
-
-1. **Theme JavaScript** - Add script to cart page that removes items on load
-2. **Checkout UI Extension** - Remove items when checkout loads (requires additional extension)
-
-Would you like me to add either of these?
+- Works with Shopify Checkout (does not work with POS)

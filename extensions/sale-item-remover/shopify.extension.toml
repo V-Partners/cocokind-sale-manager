@@ -1,0 +1,9 @@
+api_version = "2024-10"
+
+[[extensions]]
+type = "ui_extension"
+name = "sale-item-remover"
+handle = "sale-item-remover"
+
+[[extensions.targeting]]
+target = "purchase.checkout.block.render"
