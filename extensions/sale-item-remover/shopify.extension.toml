@@ -1,9 +1,11 @@
 api_version = "2024-10"
 
 [[extensions]]
+uid = "1c2db24c-ef99-2b7d-66d4-548c7b8ec6c9e1c78da5"
 type = "ui_extension"
 name = "sale-item-remover"
 handle = "sale-item-remover"
 
 [[extensions.targeting]]
 target = "purchase.checkout.block.render"
+module = "./src/Checkout.jsx"
