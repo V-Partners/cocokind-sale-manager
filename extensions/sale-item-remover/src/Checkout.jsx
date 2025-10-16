@@ -17,13 +17,13 @@ function Extension() {
   const { shop } = useApi();
   const cartLines = useCartLines();
   const applyCartLinesChange = useApplyCartLinesChange();
-  
+
   // Get shop metafield for sale status
   const shopMetafields = useAppMetafields({
     namespace: 'sitewide',
     key: 'sale_active',
   });
-  
+
   const [removedItems, setRemovedItems] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -33,7 +33,7 @@ function Extension() {
 
       // Check if sale is inactive
       const saleActive = shopMetafields[0]?.metafield?.value === 'true';
-      
+
       if (saleActive) {
         // Sale is active, nothing to remove
         return;
@@ -52,18 +52,23 @@ function Extension() {
       setIsProcessing(true);
 
       try {
-        // Remove all sale items
-        const result = await applyCartLinesChange({
-          type: 'removeCartLine',
-          id: saleItems.map(item => item.id),
-          quantity: saleItems.map(item => item.quantity),
-        });
+        // Remove sale items one by one
+        const itemNames = [];
 
-        if (result.type === 'success') {
-          // Track removed items for banner message
-          const itemNames = saleItems.map(item => 
-            item.merchandise?.title || 'Item'
-          );
+        for (const item of saleItems) {
+          const result = await applyCartLinesChange({
+            type: 'removeCartLine',
+            id: item.id,
+            quantity: item.quantity,
+          });
+
+          if (result.type === 'success') {
+            // Track removed item for banner message
+            itemNames.push(item.merchandise?.title || 'Item');
+          }
+        }
+
+        if (itemNames.length > 0) {
           setRemovedItems(itemNames);
         }
       } catch (error) {
@@ -71,6 +76,8 @@ function Extension() {
       } finally {
         setIsProcessing(false);
       }
+
+      console.log(itemNames);
     };
 
     checkAndRemoveSaleItems();
