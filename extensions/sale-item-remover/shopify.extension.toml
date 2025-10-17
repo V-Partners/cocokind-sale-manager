@@ -6,6 +6,10 @@ type = "ui_extension"
 name = "sale-item-remover"
 handle = "sale-item-remover"
 
+[[extensions.metafields]]
+namespace = "sitewide"
+key = "sale_active"
+
 [[extensions.targeting]]
 target = "purchase.checkout.block.render"
 module = "./src/Checkout.jsx"
