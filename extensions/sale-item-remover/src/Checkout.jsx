@@ -39,9 +39,9 @@ function Extension() {
         return;
       }
 
-      // Find cart lines with sitewide_discount property
+      // Find cart lines with _sitewide_discount property
       const saleItems = cartLines.filter(line => 
-        line.attributes.some(attr => attr.key === 'sitewide_discount')
+        line.attributes.some(attr => attr.key === '_sitewide_discount')
       );
 
       if (saleItems.length === 0) {
