@@ -4,7 +4,7 @@
 
 This Checkout UI Extension **automatically removes sale items** when:
 1. The sale has ended (shop metafield `sitewide.sale_active` is NOT `"true"`)
-2. Customer has items in cart with the `sitewide_discount` line item property
+2. Customer has items in cart with the `_sitewide_discount` line item property
 
 When both conditions are met, items are automatically removed and customers see a banner notification.
 
@@ -95,7 +95,7 @@ query { shop { id } }
 ┌─────────────────────────────────────────────┐
 │  Extension checks:                          │
 │  1. Is sale active? (shop metafield)        │
-│  2. Any items have sitewide_discount?       │
+│  2. Any items have _sitewide_discount?       │
 └─────────────────────────────────────────────┘
                    ↓
         ┌──────────┴──────────┐
@@ -111,7 +111,7 @@ query { shop { id } }
 
 ## Testing
 
-1. Add a product with `sitewide_discount` property to cart
+1. Add a product with `_sitewide_discount` property to cart
 2. Set metafield to `"false"` (end sale)
 3. Navigate to checkout → items should be automatically removed
 4. Should see banner notification with removed product names
