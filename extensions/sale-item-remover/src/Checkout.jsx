@@ -24,11 +24,10 @@ function Extension() {
     key: 'sale_active',
   });
 
-  const [removedItems, setRemovedItems] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const checkAndRemoveSaleItems = async () => {
+    const checkRemoveAndAddSaleItems = async () => {
       if (isProcessing) return;
 
       // Check if sale is inactive
@@ -52,45 +51,31 @@ function Extension() {
       setIsProcessing(true);
 
       try {
-        // Remove sale items one by one
-        const itemNames = [];
-
         for (const item of saleItems) {
-          const result = await applyCartLinesChange({
+          const itemAttributes = item.attributes.filter(attr => attr.key !== '_sitewide_discount');
+
+          await applyCartLinesChange({
             type: 'removeCartLine',
             id: item.id,
             quantity: item.quantity,
           });
 
-          if (result.type === 'success') {
-            // Track removed item for banner message
-            itemNames.push(item.merchandise?.title || 'Item');
-          }
-        }
-
-        if (itemNames.length > 0) {
-          setRemovedItems(itemNames);
+          await applyCartLinesChange({
+            type: 'addCartLine',
+            merchandiseId: item.merchandise.id,
+            quantity: item.quantity,
+            attributes: itemAttributes,
+          });
         }
       } catch (error) {
         console.error('Error removing sale items:', error);
       } finally {
         setIsProcessing(false);
       }
-
-      console.log(itemNames);
     };
 
-    checkAndRemoveSaleItems();
+    checkRemoveAndAddSaleItems();
   }, [shopMetafields, cartLines, applyCartLinesChange, isProcessing]);
-
-  // Show banner if items were removed
-  if (removedItems.length > 0) {
-    return (
-      <Banner status="warning">
-        The sale has ended. The following items have been removed from your cart: {removedItems.join(', ')}
-      </Banner>
-    );
-  }
 
   // Don't render anything if no items removed
   return null;
