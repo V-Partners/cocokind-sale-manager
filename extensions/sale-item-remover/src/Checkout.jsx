@@ -42,13 +42,9 @@ function Extension() {
         const hasCompareAtPrice = line.merchandise?.compareAtPrice?.amount > line.merchandise?.price?.amount;
         const hasSitewideProperty = line.attributes.some(attr => attr.key === '_sitewide_discount');
 
-        if(hasCompareAtPrice) {
-          return;
-        }
-
-        if (saleActive) {
+        if (saleActive || hasCompareAtPrice) {
           // SWS is ACTIVE:
-          // If item has compareAtPrice and doesn't have _sitewide_discount, add it
+          // If SWS is active or item has compareAtPrice and doesn't have _sitewide_discount, add it
           if (!hasSitewideProperty) {
             itemsToUpdate.push({
               id: line.id,
