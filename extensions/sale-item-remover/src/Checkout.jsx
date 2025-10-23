@@ -21,7 +21,7 @@ function Extension() {
   useEffect(() => {
     async function fetchPrices() {
       if (cartLines.length === 0) return;
-      
+
       const variantIds = cartLines.map(line => line.merchandise.id);
       const queryString = `
         query GetVariantPrices($ids: [ID!]!) {
@@ -38,7 +38,7 @@ function Extension() {
           }
         }
       `;
-      
+
       try {
         const { data } = await query(queryString, { variables: { ids: variantIds } });
         const prices = {};
@@ -56,7 +56,7 @@ function Extension() {
         console.error('Error fetching prices:', error);
       }
     }
-    
+
     fetchPrices();
   }, [cartLines, query]);
 
@@ -138,5 +138,5 @@ function Extension() {
   }, [shopMetafields, cartLines, applyCartLinesChange, isProcessing, priceData]);
 
   // Don't render anything if no items removed
-  return <>testing 2</>;
+  return null;
 }
