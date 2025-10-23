@@ -14,8 +14,52 @@ export default reactExtension(
 );
 
 function Extension() {
-  const { shop } = useApi();
+  const { query } = useApi();
   const cartLines = useCartLines();
+  const [priceData, setPriceData] = useState({});
+
+  useEffect(() => {
+    async function fetchPrices() {
+      if (cartLines.length === 0) return;
+
+      const variantIds = cartLines.map(line => line.merchandise.id);
+      const queryString = `
+        query GetVariantPrices($ids: [ID!]!) {
+          nodes(ids: $ids) {
+            ... on ProductVariant {
+              id
+              price {
+                amount
+              }
+              compareAtPrice {
+                amount
+              }
+            }
+          }
+        }
+      `;
+
+      try {
+        const { data } = await query(queryString, { variables: { ids: variantIds } });
+        const prices = {};
+        data.nodes.forEach(node => {
+          if (node) {
+            prices[node.id] = {
+              price: node.price?.amount,
+              compareAtPrice: node.compareAtPrice?.amount
+            };
+          }
+        });
+        setPriceData(prices);
+        console.log('Price data:', prices);
+      } catch (error) {
+        console.error('Error fetching prices:', error);
+      }
+    }
+
+    fetchPrices();
+  }, [cartLines, query]);
+
   const applyCartLinesChange = useApplyCartLinesChange();
 
   // Get shop metafield for sale status
@@ -39,7 +83,8 @@ function Extension() {
       const itemsToUpdate = [];
 
       for (const line of cartLines) {
-        const hasCompareAtPrice = line.merchandise?.compareAtPrice?.amount > line.merchandise?.price?.amount;
+        const prices = priceData[line.merchandise.id];
+        const hasCompareAtPrice = prices?.compareAtPrice && prices.compareAtPrice > prices.price;
         const hasSitewideProperty = line.attributes.some(attr => attr.key === '_sitewide_discount');
 
         if (saleActive || hasCompareAtPrice) {
@@ -90,7 +135,7 @@ function Extension() {
     };
 
     manageSaleItemProperties();
-  }, [shopMetafields, cartLines, applyCartLinesChange, isProcessing]);
+  }, [shopMetafields, cartLines, applyCartLinesChange, isProcessing, priceData]);
 
   // Don't render anything if no items removed
   return null;

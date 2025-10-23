@@ -13,3 +13,6 @@ key = "sale_active"
 [[extensions.targeting]]
 target = "purchase.checkout.block.render"
 module = "./src/Checkout.jsx"
+
+[extensions.capabilities]
+api_access = true
