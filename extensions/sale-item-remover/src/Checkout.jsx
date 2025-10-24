@@ -91,12 +91,9 @@ function Extension() {
           // SWS is ACTIVE:
           // If SWS is active or item has compareAtPrice and doesn't have _sitewide_discount, add it
           if (!hasSitewideProperty) {
-            const discountAmount = prices?.compareAtPrice && prices?.price
-              ? (parseFloat(prices.compareAtPrice) - parseFloat(prices.price)).toFixed(2)
-              : '0.00';
             itemsToUpdate.push({
               id: line.id,
-              attributes: [...line.attributes, { key: '_sitewide_discount', value: discountAmount }]
+              attributes: [...line.attributes, { key: '_sitewide_discount', value: 'true' }]
             });
           }
         } else {
