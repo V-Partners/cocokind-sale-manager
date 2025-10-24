@@ -5,13 +5,12 @@ import {
   useAppMetafields,
   Banner,
   useApplyCartLinesChange,
-} from '@shopify/ui-extensions-react/checkout';
-import { useEffect, useState } from 'react';
+} from "@shopify/ui-extensions-react/checkout";
+import { useEffect, useState } from "react";
 
-export default reactExtension(
-  'purchase.checkout.block.render',
-  () => <Extension />
-);
+export default reactExtension("purchase.checkout.block.render", () => (
+  <Extension />
+));
 
 function Extension() {
   const { query } = useApi();
@@ -22,7 +21,7 @@ function Extension() {
     async function fetchPrices() {
       if (cartLines.length === 0) return;
 
-      const variantIds = cartLines.map(line => line.merchandise.id);
+      const variantIds = cartLines.map((line) => line.merchandise.id);
       const queryString = `
         query GetVariantPrices($ids: [ID!]!) {
           nodes(ids: $ids) {
@@ -40,20 +39,22 @@ function Extension() {
       `;
 
       try {
-        const { data } = await query(queryString, { variables: { ids: variantIds } });
+        const { data } = await query(queryString, {
+          variables: { ids: variantIds },
+        });
         const prices = {};
-        data.nodes.forEach(node => {
+        data.nodes.forEach((node) => {
           if (node) {
             prices[node.id] = {
               price: node.price?.amount,
-              compareAtPrice: node.compareAtPrice?.amount
+              compareAtPrice: node.compareAtPrice?.amount,
             };
           }
         });
         setPriceData(prices);
-        console.log('Price data:', prices);
+        console.log("Price data:", prices);
       } catch (error) {
-        console.error('Error fetching prices:', error);
+        console.error("Error fetching prices:", error);
       }
     }
 
@@ -64,8 +65,8 @@ function Extension() {
 
   // Get shop metafield for sale status
   const shopMetafields = useAppMetafields({
-    namespace: 'sitewide',
-    key: 'sale_active',
+    namespace: "sitewide",
+    key: "sale_active",
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,23 +80,33 @@ function Extension() {
         return;
       }
 
-      const saleActive = shopMetafields[0]?.metafield?.value === 'true';
+      const saleActive = shopMetafields[0]?.metafield?.value === "true";
       const itemsToUpdate = [];
 
       for (const line of cartLines) {
         const prices = priceData[line.merchandise.id];
-        const hasCompareAtPrice = prices?.compareAtPrice && prices.compareAtPrice > prices.price;
-        const hasSitewideProperty = line.attributes.some(attr => attr.key === '_sitewide_discount');
+        const hasCompareAtPrice =
+          prices?.compareAtPrice && prices.compareAtPrice > prices.price;
+        const hasSitewideProperty = line.attributes.some(
+          (attr) => attr.key === "_sitewide_discount",
+        );
 
         if (saleActive || hasCompareAtPrice) {
-          // SWS is ACTIVE:
-          // If SWS is active or item has compareAtPrice and doesn't have _sitewide_discount, add it
-          if (!hasSitewideProperty) {
-            itemsToUpdate.push({
-              id: line.id,
-              attributes: [...line.attributes, { key: '_sitewide_discount', value: 'true' }]
-            });
-          }
+          const discountAmount =
+            prices?.compareAtPrice && prices?.price
+              ? (
+                  parseFloat(prices.compareAtPrice) - parseFloat(prices.price)
+                ).toFixed(2)
+              : "0.00";
+
+          itemsToUpdate.push({
+            id: line.id,
+
+            attributes: [
+              ...line.attributes,
+              { key: "_sitewide_discount", value: discountAmount },
+            ],
+          });
         } else {
           // SWS is INACTIVE:
           // If item has compareAtPrice, leave it alone (different sale)
@@ -103,7 +114,9 @@ function Extension() {
           if (hasSitewideProperty) {
             itemsToUpdate.push({
               id: line.id,
-              attributes: line.attributes.filter(attr => attr.key !== '_sitewide_discount')
+              attributes: line.attributes.filter(
+                (attr) => attr.key !== "_sitewide_discount",
+              ),
             });
           }
         }
@@ -118,24 +131,30 @@ function Extension() {
       try {
         for (const update of itemsToUpdate) {
           const result = await applyCartLinesChange({
-            type: 'updateCartLine',
+            type: "updateCartLine",
             id: update.id,
             attributes: update.attributes,
           });
 
-          if (result.type === 'error') {
-            console.error('Error updating cart line:', result.message);
+          if (result.type === "error") {
+            console.error("Error updating cart line:", result.message);
           }
         }
       } catch (error) {
-        console.error('Error managing sale item properties:', error);
+        console.error("Error managing sale item properties:", error);
       } finally {
         setIsProcessing(false);
       }
     };
 
     manageSaleItemProperties();
-  }, [shopMetafields, cartLines, applyCartLinesChange, isProcessing, priceData]);
+  }, [
+    shopMetafields,
+    cartLines,
+    applyCartLinesChange,
+    isProcessing,
+    priceData,
+  ]);
 
   // Don't render anything if no items removed
   return null;
